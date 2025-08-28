@@ -8,7 +8,7 @@ import sendEmail from "../utils/sendEmail.js";
 const generateToken = (user) => {
   return jwt.sign(
     { user: { id: user._id, role: user.role } },
-    process.env.JWT_SECRET || "secretkey",
+    process.env.JWT_SECRET,
     process.env.JWT_EXPIRE
   );
 };
@@ -58,7 +58,7 @@ export const registerUser = async (req, res) => {
 export const verifyEmail = async (req, res) => {
   try {
     const { token } = req.params;
-    const decoded = jwt.verify(token, process.env.JWT_SECRET || "secretkey");
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
 
     const user = await User.findById(decoded.id);
     if (!user) return res.status(400).json({ message: "Invalid token" });
@@ -154,7 +154,7 @@ export const resetPassword = async (req, res) => {
     const { token } = req.params;
     const { password } = req.body;
 
-    const decoded = jwt.verify(token, process.env.JWT_SECRET || "secretkey");
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
     const user = await User.findById(decoded.id);
     if (!user) return res.status(400).json({ message: "Invalid token" });
 
