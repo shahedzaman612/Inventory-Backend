@@ -85,10 +85,23 @@ const getInventoryStats = async (req, res) => {
   }
 };
 
+const myProfile =async (req, res) => {
+  const Inventory = require("../models/Inventory");
+
+  try {
+    const inventories = await Inventory.find({ userId: req.user.id });
+    res.json(inventories);
+  } catch (err) {
+    console.error("Error fetching user inventories:", err);
+    res.status(500).json({ message: "Server error" });
+  }
+};
+
 module.exports = {
   getAllInventories,
   createInventory,
   updateInventory,
+  myProfile,
   deleteInventory,
   getInventoryStats,
 };

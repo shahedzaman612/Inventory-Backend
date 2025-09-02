@@ -4,7 +4,8 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "node server.js"
   },
   "keywords": [],
   "author": "",
@@ -24,5 +25,13 @@
   },
   "devDependencies": {
     "nodemon": "^3.1.10"
-  }
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/shahedzaman612/Inventory-Backend.git"
+  },
+  "bugs": {
+    "url": "https://github.com/shahedzaman612/Inventory-Backend/issues"
+  },
+  "homepage": "https://github.com/shahedzaman612/Inventory-Backend#readme"
 }

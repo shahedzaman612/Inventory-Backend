@@ -7,6 +7,7 @@ const {
   getInventoryStats,
   updateInventory,
   deleteInventory,
+  myProfile,
 } = require("../controllers/inventoryController");
 
 // @route   GET /api/inventories
@@ -33,5 +34,10 @@ router.put("/:id", auth, updateInventory);
 // @desc    Delete an inventory
 // @access  Creator or Admin
 router.delete("/:id", auth, deleteInventory);
+// @route   GET /api/inventories/my
+// @desc    Get inventories of the logged-in user
+// @access  Authenticated users
+router.get("/my", auth, myProfile);
+
 
 module.exports = router;
