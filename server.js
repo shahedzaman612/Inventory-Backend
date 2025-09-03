@@ -36,8 +36,14 @@ connectDB();
 
 // Routes
 app.use("/api/auth", authRoutes);
+
+// Mount inventory routes (including search) first
 app.use("/api/inventories", inventoryRoutes);
+
+// Mount item routes under inventory
 app.use("/api/inventories/:inventoryId/items", itemRoutes);
+
+// Mount inventory detail routes (must be after search & inventory routes)
 app.use("/api/inventories", inventoryDetailRoutes);
 
 // Test route

@@ -14,29 +14,19 @@ const getAllInventories = async (req, res) => {
   }
 };
 
-// Full-text search inventories
+// Full-text search inventories using MongoDB text index
 const searchInventories = async (req, res) => {
   try {
     const query = req.query.q;
     if (!query) return res.json([]);
 
-    // Build regex for partial + case-insensitive matching
-    const regex = new RegExp(query, "i");
-
-    const results = await Inventory.find({
-      $or: [
-        { title: regex },
-        { description: regex },
-        { category: regex },
-        { tags: regex },
-        { "customFields.stringFields": regex },
-        { "customFields.textFields": regex },
-        { "customFields.linkFields": regex },
-        { "customFields.dropdownFields": regex },
-        // Convert numberFields to string for regex matching
-        { "customFields.numberFields": { $regex: regex } },
-      ],
-    }).limit(20);
+    const results = await Inventory.find(
+      { $text: { $search: query } },
+      { score: { $meta: "textScore" } }
+    )
+      .sort({ score: { $meta: "textScore" } })
+      .limit(20)
+      .populate("userId", "username email role");
 
     res.json(results);
   } catch (err) {
@@ -121,7 +111,7 @@ const myProfile = async (req, res) => {
 
 module.exports = {
   getAllInventories,
-  searchInventories, 
+  searchInventories,
   createInventory,
   updateInventory,
   deleteInventory,
