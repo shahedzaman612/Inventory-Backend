@@ -25,7 +25,15 @@ const inventorySchema = new mongoose.Schema(
   { timestamps: true }
 );
 
-// Add indexes for faster search
-inventorySchema.index({ title: "text", description: "text", tags: 1, category: 1 });
+// Full-text search index
+inventorySchema.index({
+  title: "text",
+  description: "text",
+  "customFields.stringFields": "text",
+  "customFields.textFields": "text",
+  "customFields.dropdownFields": "text",
+  category: "text",
+  tags: "text",
+});
 
 module.exports = mongoose.model("Inventory", inventorySchema);
