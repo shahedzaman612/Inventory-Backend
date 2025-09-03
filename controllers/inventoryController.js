@@ -14,17 +14,24 @@ const getAllInventories = async (req, res) => {
   }
 };
 
-// Full-text search inventories using MongoDB text index
+// Flexible search inventories by multiple fields
 const searchInventories = async (req, res) => {
   try {
     const query = req.query.q;
     if (!query) return res.json([]);
 
-    const results = await Inventory.find(
-      { $text: { $search: query } },
-      { score: { $meta: "textScore" } }
-    )
-      .sort({ score: { $meta: "textScore" } })
+    // Create a case-insensitive regex pattern
+    const regex = new RegExp(query, "i");
+
+    // Search across multiple fields
+    const results = await Inventory.find({
+      $or: [
+        { name: regex },
+        { category: regex },
+        { description: regex }
+      ]
+    })
+      .sort({ createdAt: -1 })
       .limit(20)
       .populate("userId", "username email role");
 
@@ -34,6 +41,7 @@ const searchInventories = async (req, res) => {
     res.status(500).json({ error: "Search failed" });
   }
 };
+
 
 // Create inventory
 const createInventory = async (req, res) => {
