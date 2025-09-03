@@ -15,19 +15,19 @@ const addItem = async (req, res) => {
       return res.status(404).json({ message: "Inventory not found" });
     }
 
-    // Any logged-in user can add items
     const existingItem = await Item.findOne({ itemId });
     if (existingItem) {
       return res.status(409).json({ message: "Item ID already exists" });
     }
 
+    // ✅ Save customFields as plain object
     const item = new Item({
       itemId,
       name,
       quantity,
       inventoryId: inventory._id,
-      userId: req.user.id, // who added the item
-      customFields: new Map(Object.entries(customFields || {})), // ✅ convert to Map
+      userId: req.user.id,
+      customFields: customFields || {}, // object
     });
 
     await item.save();
@@ -54,9 +54,9 @@ const updateItem = async (req, res) => {
       return res.status(403).json({ message: "Unauthorized" });
     }
 
-    if (req.body.customFields) {
-      // Replace customFields with a new Map
-      item.customFields = new Map(Object.entries(req.body.customFields));
+    // ✅ Update customFields as object
+    if (req.body.customFields && typeof req.body.customFields === "object") {
+      item.customFields = req.body.customFields;
     }
 
     // Update other fields

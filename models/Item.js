@@ -8,8 +8,8 @@ const itemSchema = new mongoose.Schema(
     inventoryId: { type: mongoose.Schema.Types.ObjectId, ref: "Inventory", required: true },
     userId: { type: mongoose.Schema.Types.ObjectId, ref: "User", required: true },
 
-    // Flexible dynamic fields
-    customFields: { type: Map, of: String, default: {} },
+    // Flexible dynamic fields as plain object
+    customFields: { type: Object, default: {} }, // ✅ changed from Map to Object
   },
   { timestamps: true }
 );
