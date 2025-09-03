@@ -14,8 +14,10 @@ const inventorySchema = new mongoose.Schema(
     },
     // Optional custom fields
     customFields: {
-      stringFields: { type: [String], default: [] },
+      stringFields: { type: [String], default: [] },  // short strings
+      textFields: { type: [String], default: [] },    // text blocks
       numberFields: { type: [Number], default: [] },
+      linkFields: { type: [String], default: [] },
       booleanFields: { type: [Boolean], default: [] },
       dropdownFields: { type: [String], default: [] },
     },
