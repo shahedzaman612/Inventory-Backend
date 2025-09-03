@@ -14,10 +14,30 @@ const getAllInventories = async (req, res) => {
   }
 };
 
+// Full-text search inventories
+const searchInventories = async (req, res) => {
+  try {
+    const { q } = req.query;
+    if (!q) return res.status(400).json({ message: "Search query is required" });
+
+    const results = await Inventory.find(
+      { $text: { $search: q } },
+      { score: { $meta: "textScore" } } // add relevance score
+    )
+      .sort({ score: { $meta: "textScore" }, createdAt: -1 })
+      .populate("userId", "username email role");
+
+    res.json(results);
+  } catch (err) {
+    console.error("Search Error:", err.message);
+    res.status(500).json({ message: "Server error during search" });
+  }
+};
+
 // Create inventory
 const createInventory = async (req, res) => {
   try {
-    const inventory = new Inventory({ ...req.body, userId: req.user.id }); // userId is the creator
+    const inventory = new Inventory({ ...req.body, userId: req.user.id });
     await inventory.save();
     res.status(201).json(inventory);
   } catch (err) {
@@ -29,15 +49,11 @@ const createInventory = async (req, res) => {
 // Update inventory
 const updateInventory = async (req, res) => {
   try {
-    const inventory = await Inventory.findById(req.params.id); // changed to match route param
+    const inventory = await Inventory.findById(req.params.id);
     if (!inventory)
       return res.status(404).json({ message: "Inventory not found" });
 
-    // Only creator or admin can update
-    if (
-      req.user.id !== inventory.userId.toString() &&
-      req.user.role !== "admin"
-    ) {
+    if (req.user.id !== inventory.userId.toString() && req.user.role !== "admin") {
       return res.status(403).json({ message: "Unauthorized" });
     }
 
@@ -53,15 +69,11 @@ const updateInventory = async (req, res) => {
 // Delete inventory
 const deleteInventory = async (req, res) => {
   try {
-    const inventory = await Inventory.findById(req.params.id); // changed to match route param
+    const inventory = await Inventory.findById(req.params.id);
     if (!inventory)
       return res.status(404).json({ message: "Inventory not found" });
 
-    // Only creator or admin can delete
-    if (
-      req.user.id !== inventory.userId.toString() &&
-      req.user.role !== "admin"
-    ) {
+    if (req.user.id !== inventory.userId.toString() && req.user.role !== "admin") {
       return res.status(403).json({ message: "Unauthorized" });
     }
 
@@ -85,23 +97,23 @@ const getInventoryStats = async (req, res) => {
   }
 };
 
-const myProfile =async (req, res) => {
-  const Inventory = require("../models/Inventory");
-
+// Get inventories of logged-in user
+const myProfile = async (req, res) => {
   try {
     const inventories = await Inventory.find({ userId: req.user.id });
     res.json(inventories);
   } catch (err) {
-    console.error("Error fetching user inventories:", err);
+    console.error("Error fetching user inventories:", err.message);
     res.status(500).json({ message: "Server error" });
   }
 };
 
 module.exports = {
   getAllInventories,
+  searchInventories, 
   createInventory,
   updateInventory,
-  myProfile,
   deleteInventory,
   getInventoryStats,
+  myProfile,
 };
