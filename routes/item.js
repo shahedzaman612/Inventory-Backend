@@ -1,5 +1,6 @@
 const express = require("express");
 const router = express.Router({ mergeParams: true });
+const item = require('../models/Item')
 const auth = require("../middleware/auth");
 const {
   addItem,
