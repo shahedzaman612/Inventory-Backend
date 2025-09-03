@@ -5,18 +5,21 @@ const Inventory = require("../models/Inventory");
 const addItem = async (req, res) => {
   const { itemId, name, quantity, customFields } = req.body;
 
-  if (!itemId || !name || quantity === undefined)
+  if (!itemId || !name || quantity === undefined) {
     return res.status(400).json({ message: "All fields are required" });
+  }
 
   try {
     const inventory = await Inventory.findById(req.params.inventoryId);
-    if (!inventory)
+    if (!inventory) {
       return res.status(404).json({ message: "Inventory not found" });
+    }
 
     // Any logged-in user can add items
     const existingItem = await Item.findOne({ itemId });
-    if (existingItem)
+    if (existingItem) {
       return res.status(409).json({ message: "Item ID already exists" });
+    }
 
     const item = new Item({
       itemId,
@@ -24,7 +27,7 @@ const addItem = async (req, res) => {
       quantity,
       inventoryId: inventory._id,
       userId: req.user.id, // who added the item
-      customFields: customFields || {},
+      customFields: new Map(Object.entries(customFields || {})), // ✅ convert to Map
     });
 
     await item.save();
@@ -51,7 +54,16 @@ const updateItem = async (req, res) => {
       return res.status(403).json({ message: "Unauthorized" });
     }
 
-    Object.assign(item, req.body);
+    if (req.body.customFields) {
+      // Replace customFields with a new Map
+      item.customFields = new Map(Object.entries(req.body.customFields));
+    }
+
+    // Update other fields
+    if (req.body.itemId) item.itemId = req.body.itemId;
+    if (req.body.name) item.name = req.body.name;
+    if (req.body.quantity !== undefined) item.quantity = req.body.quantity;
+
     await item.save();
     res.json(item);
   } catch (err) {
