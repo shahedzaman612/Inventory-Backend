@@ -17,20 +17,31 @@ const getAllInventories = async (req, res) => {
 // Full-text search inventories
 const searchInventories = async (req, res) => {
   try {
-    const { q } = req.query;
-    if (!q) return res.status(400).json({ message: "Search query is required" });
+    const query = req.query.q;
+    if (!query) return res.json([]);
 
-    const results = await Inventory.find(
-      { $text: { $search: q } },
-      { score: { $meta: "textScore" } } // add relevance score
-    )
-      .sort({ score: { $meta: "textScore" }, createdAt: -1 })
-      .populate("userId", "username email role");
+    // Build regex for partial + case-insensitive matching
+    const regex = new RegExp(query, "i");
+
+    const results = await Inventory.find({
+      $or: [
+        { title: regex },
+        { description: regex },
+        { category: regex },
+        { tags: regex },
+        { "customFields.stringFields": regex },
+        { "customFields.textFields": regex },
+        { "customFields.linkFields": regex },
+        { "customFields.dropdownFields": regex },
+        // Convert numberFields to string for regex matching
+        { "customFields.numberFields": { $regex: regex } },
+      ],
+    }).limit(20);
 
     res.json(results);
   } catch (err) {
-    console.error("Search Error:", err.message);
-    res.status(500).json({ message: "Server error during search" });
+    console.error("Search error:", err);
+    res.status(500).json({ error: "Search failed" });
   }
 };
 
