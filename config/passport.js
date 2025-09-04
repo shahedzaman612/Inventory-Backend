@@ -5,7 +5,6 @@ const User = require("../models/User");
 const jwt = require("jsonwebtoken");
 
 module.exports = function (passport) {
-  // Helper to generate JWT
   const generateToken = (user) => {
     return jwt.sign(
       { user: { id: user._id, role: user.role } },
@@ -14,13 +13,13 @@ module.exports = function (passport) {
     );
   };
 
-  // ================= GOOGLE STRATEGY =================
+  // Google Strategy
   passport.use(
     new GoogleStrategy(
       {
         clientID: process.env.GOOGLE_CLIENT_ID,
         clientSecret: process.env.GOOGLE_CLIENT_SECRET,
-        callbackURL: "/auth/google/callback",
+        callbackURL: process.env.GOOGLE_CALLBACK_URL || "http://localhost:5000/auth/google/callback",
       },
       async (accessToken, refreshToken, profile, done) => {
         try {
@@ -28,43 +27,38 @@ module.exports = function (passport) {
           let user = await User.findOne({ email });
 
           if (!user) {
-            // Create new user
             user = new User({
               username: profile.displayName,
               email,
-              password: "", // OAuth users don't have local password
+              password: "",
               isVerified: true,
               oauthProvider: "google",
             });
             await user.save();
           }
 
-          // Generate JWT
           const token = generateToken(user);
-          user = user.toObject();
-          user.token = token;
+          const safeUser = user.toObject();
+          safeUser.token = token;
 
-          return done(null, user);
+          return done(null, safeUser);
         } catch (err) {
-          console.error("Google OAuth Error:", err);
           return done(err, null);
         }
       }
     )
   );
 
-  // ================= GITHUB STRATEGY =================
+  // GitHub Strategy
   passport.use(
     new GitHubStrategy(
       {
         clientID: process.env.GITHUB_CLIENT_ID,
         clientSecret: process.env.GITHUB_CLIENT_SECRET,
-        callbackURL: "/auth/github/callback",
-        scope: ["user:email"],
+        callbackURL: process.env.GITHUB_CALLBACK_URL || "http://localhost:5000/auth/github/callback",
       },
       async (accessToken, refreshToken, profile, done) => {
         try {
-          // GitHub email may not be public
           const email = profile.emails?.[0]?.value;
           if (!email) return done(new Error("GitHub email not found"), null);
 
@@ -82,26 +76,23 @@ module.exports = function (passport) {
           }
 
           const token = generateToken(user);
-          user = user.toObject();
-          user.token = token;
+          const safeUser = user.toObject();
+          safeUser.token = token;
 
-          return done(null, user);
+          return done(null, safeUser);
         } catch (err) {
-          console.error("GitHub OAuth Error:", err);
           return done(err, null);
         }
       }
     )
   );
 
-  // ================= SERIALIZE / DESERIALIZE =================
-  passport.serializeUser((user, done) => done(null, user._id));
-  passport.deserializeUser(async (id, done) => {
-    try {
-      const user = await User.findById(id);
-      done(null, user);
-    } catch (err) {
-      done(err, null);
-    }
+  // Serialize/Deserialize
+  passport.serializeUser((user, done) => {
+    done(null, user); // ✅ serialize full user including token
+  });
+
+  passport.deserializeUser((user, done) => {
+    done(null, user); // ✅ just return the same object
   });
 };

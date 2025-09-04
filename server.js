@@ -66,6 +66,7 @@ app.get(
   passport.authenticate("google", { failureRedirect: `${process.env.CLIENT_URL}/login` }),
   (req, res) => {
     // On success, redirect to frontend with JWT
+    console.log("Authenticated user:", req.user);
     const token = req.user.token;
     res.redirect(`${process.env.CLIENT_URL}/oauth-success?token=${token}`);
   }
@@ -80,6 +81,7 @@ app.get(
   "/auth/github/callback",
   passport.authenticate("github", { failureRedirect: `${process.env.CLIENT_URL}/login` }),
   (req, res) => {
+    console.log("Authenticated user:", req.user);
     const token = req.user.token;
     res.redirect(`${process.env.CLIENT_URL}/oauth-success?token=${token}`);
   }
